@@ -1,0 +1,17 @@
+# Logs, builds and local files
+*.log
+*.tmp
+*.bak
+
+# Docker
+**/volumes/*
+!volumes/.gitkeep
+
+# IDE/OS
+.DS_Store
+.idea/
+.vscode/
+
+# Env files
+.env
+.env.*
