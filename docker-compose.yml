@@ -1,6 +1,24 @@
 version: "3.8"
 
 services:
+  
+  user-service:
+    build: 
+      context: ../user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - backend
+
+#  auth-service:
+#    build: ../auth-service
+#    ports:
+#      - "3002:3000"
+#    labels:
+#      - "metrics_path=/metrics"
+#    networks:
+#      - backend
   postgres:
     image: postgres:15
     container_name: fitcore-postgres
@@ -13,6 +31,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -26,6 +46,8 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
 
   minio:
     image: minio/minio
@@ -39,6 +61,27 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASS}
     volumes:
       - minio_data:/data
+  
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+
+networks:
+  backend:
 
 volumes:
   postgres_data:
