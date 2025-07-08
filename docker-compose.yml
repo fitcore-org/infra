@@ -61,6 +61,27 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASS}
     volumes:
       - minio_data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  minio-init:
+    image: quay.io/minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "sleep 15 && \
+        mc alias set local http://minio:9000 ${MINIO_USER} ${MINIO_PASS} && \
+        mc mb local/fitcore-users-profile || true && \
+        mc anonymous set public local/fitcore-users-profile && \
+        echo 'Bucket policy status:' && \
+        mc anonymous get local/fitcore-users-profile"
+    networks:
+      - backend
   
   prometheus:
     image: prom/prometheus
