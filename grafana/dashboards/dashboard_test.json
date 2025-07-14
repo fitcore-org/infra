@@ -1,0 +1,22 @@
+{
+  "uid": "dashboard-teste-01",
+  "title": "Meu Dashboard Automático",
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Teste de Conexão com Postgres",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": {
+        "type": "postgres",
+        "uid": "fitcore_postgres_ds"  
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT (CASE WHEN EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'students_registered') THEN (SELECT COUNT(*) FROM students_registered) ELSE 0 END) as value, now() as time",
+          "format": "time_series"
+        }
+      ]
+    }
+  ]
+}

@@ -1,15 +1,30 @@
-version: "3.8"
-
 services:
-  
-  user-service:
-    build: 
-      context: ../user-service
-      dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
+
+  analytics-consumer:
+    build: ../analytics-consumer
+    depends_on:
+      - rabbitmq
+      - postgres-analytics
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      QUEUES: ${QUEUES}
+      DB_NAME: ${ANALYTICS_DB_NAME}
+      DB_USER: ${ANALYTICS_DB_USER}
+      DB_PASS: ${ANALYTICS_DB_PASS}
+      DB_HOST: postgres-analytics
     networks:
       - backend
+
+#  user-service:
+#    build: 
+#      context: ../user-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8081:8081"
+#    networks:
+#      - backend
 
 #  auth-service:
 #    build: ../auth-service
@@ -31,6 +46,44 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+  
+  postgres-analytics:
+    image: postgres:15
+    container_name: fitcore-postgres-analytics
+    restart: unless-stopped
+    ports:
+      # Mapeamos para uma porta diferente no host para evitar conflito com a porta 5432
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${ANALYTICS_DB_USER}
+      POSTGRES_PASSWORD: ${ANALYTICS_DB_PASS}
+      POSTGRES_DB: ${ANALYTICS_DB_NAME}
+      # A configuração chave para compatibilidade com o Grafana
+      POSTGRES_HOST_AUTH_METHOD: "md5"
+    volumes:
+      # Um volume separado para os dados de analytics
+      - postgres_analytics_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics_user -d analytics_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: fitcore-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
     networks:
       - backend
 
@@ -93,11 +146,28 @@ services:
       - backend
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:10.4.1
+    user: root
     ports:
       - "3000:3000"
     depends_on:
-      - prometheus
+      postgres-analytics:
+        condition: service_healthy
+      prometheus:
+        condition: service_started 
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - ANALYTICS_DB_USER=${ANALYTICS_DB_USER}
+      - ANALYTICS_DB_PASS=${ANALYTICS_DB_PASS}
+      - ANALYTICS_DB_NAME=${ANALYTICS_DB_NAME}
+
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_LOG_LEVEL=debug
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - backend
 
@@ -106,5 +176,6 @@ networks:
 
 volumes:
   postgres_data:
+  postgres_analytics_data:
   rabbitmq_data:
   minio_data:
