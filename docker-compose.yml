@@ -129,10 +129,16 @@ services:
     entrypoint: >
       /bin/sh -c "sleep 15 && \
         mc alias set local http://minio:9000 ${MINIO_USER} ${MINIO_PASS} && \
+        \
         mc mb local/fitcore-users-profile || true && \
         mc anonymous set public local/fitcore-users-profile && \
-        echo 'Bucket policy status:' && \
-        mc anonymous get local/fitcore-users-profile"
+        echo 'Bucket policy (users-profile):' && \
+        mc anonymous get local/fitcore-users-profile && \
+        \
+        mc mb local/fitcore-exercises || true && \
+        mc anonymous set public local/fitcore-exercises && \
+        echo 'Bucket policy (exercises):' && \
+        mc anonymous get local/fitcore-exercises"
     networks:
       - backend
   
