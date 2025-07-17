@@ -3,8 +3,10 @@ services:
   analytics-consumer:
     build: ../analytics-consumer
     depends_on:
-      - rabbitmq
-      - postgres-analytics
+      postgres-analytics:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
@@ -14,17 +16,29 @@ services:
       DB_USER: ${ANALYTICS_DB_USER}
       DB_PASS: ${ANALYTICS_DB_PASS}
       DB_HOST: postgres-analytics
+    healthcheck:
+      test: ["CMD", "echo", "ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - backend
 
-#  user-service:
-#    build: 
-#      context: ../user-service
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8081:8081"
-#    networks:
-#      - backend
+  user-service:
+    build: 
+      context: ../user-service
+      dockerfile: Dockerfile
+    depends_on:
+      analytics-consumer:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    ports:
+      - "8081:8081"
+    networks:
+      - backend
 
 #  auth-service:
 #    build: ../auth-service
@@ -44,6 +58,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitcore -d auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
