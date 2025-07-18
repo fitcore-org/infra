@@ -1,7 +1,7 @@
 apiVersion: 1
 
 datasources:
-  - name: FitCore-Analytics-Postgres  # Nome que aparecerá na interface do Grafana
+  - name: FitCore-Analytics-Postgres  # Nome na interface do Grafana
     type: postgres
     uid: fitcore_postgres_ds # UID fixo 
     url: postgres-analytics:5432

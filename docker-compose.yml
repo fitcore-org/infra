@@ -29,25 +29,45 @@ services:
       context: ../user-service
       dockerfile: Dockerfile
     depends_on:
-      analytics-consumer:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      minio:
+        condition: service_healthy
     ports:
       - "8081:8081"
     networks:
       - backend
 
-#  auth-service:
-#    build: ../auth-service
-#    ports:
-#      - "3002:3000"
-#    labels:
-#      - "metrics_path=/metrics"
-#    networks:
-#      - backend
+  auth-service:
+    build: 
+      context: ../auth-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+
+  training-service:
+    build: 
+      context: ../training-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DEEPL_API_KEY=${DEEPL_API_KEY}
+    ports:
+      - "8082:8082"
+    networks:
+      - backend
+
   postgres:
     image: postgres:15
     container_name: fitcore-postgres
