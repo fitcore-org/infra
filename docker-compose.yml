@@ -1,12 +1,16 @@
 services:
 
   analytics-consumer:
-    build: ../analytics-consumer
+    build: 
+      context: ../analytics-consumer
+      dockerfile: Dockerfile
+    container_name: fitcore-analytics-consumer
+    restart: unless-stopped
     depends_on:
       postgres-analytics:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
@@ -16,11 +20,13 @@ services:
       DB_USER: ${ANALYTICS_DB_USER}
       DB_PASS: ${ANALYTICS_DB_PASS}
       DB_HOST: postgres-analytics
+      DB_PORT: 5432
     healthcheck:
-      test: ["CMD", "echo", "ok"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "python", "-c", "import psycopg2; print('OK')"]
+      interval: 30s
+      timeout: 10s
       retries: 5
+      start_period: 60s
     networks:
       - backend
 
@@ -28,15 +34,37 @@ services:
     build: 
       context: ../user-service
       dockerfile: Dockerfile
+    container_name: fitcore-user-service
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
       minio:
         condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASS: ${POSTGRES_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_EXTERNAL_URL: ${MINIO_EXTERNAL_URL}
+      MINIO_ACCESS_KEY: ${MINIO_USER}
+      MINIO_SECRET_KEY: ${MINIO_PASS}
     ports:
       - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
     networks:
       - backend
 
@@ -44,13 +72,31 @@ services:
     build: 
       context: ../auth-service
       dockerfile: Dockerfile
+    container_name: fitcore-auth-service
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASS: ${POSTGRES_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
     networks:
       - backend
 
@@ -58,18 +104,37 @@ services:
     build: 
       context: ../training-service
       dockerfile: Dockerfile
+    container_name: fitcore-training-service
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      - DEEPL_API_KEY=${DEEPL_API_KEY}
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASS: ${POSTGRES_PASSWORD}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_EXTERNAL_URL: ${MINIO_EXTERNAL_URL}
+      MINIO_ACCESS_KEY: ${MINIO_USER}
+      MINIO_SECRET_KEY: ${MINIO_PASS}
+      DEEPL_API_KEY: ${DEEPL_API_KEY}
+      TRANSLATION_ENABLED: ${TRANSLATION_ENABLED}
     ports:
       - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
     networks:
       - backend
 
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: fitcore-postgres
     restart: unless-stopped
     ports:
@@ -78,76 +143,90 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fitcore -d auth"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - backend
   
   postgres-analytics:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: fitcore-postgres-analytics
     restart: unless-stopped
     ports:
-      # Mapeamos para uma porta diferente no host para evitar conflito com a porta 5432
-      - "5433:5432"
+      - "5433:5432" # Porta externa diferente
     environment:
       POSTGRES_USER: ${ANALYTICS_DB_USER}
       POSTGRES_PASSWORD: ${ANALYTICS_DB_PASS}
       POSTGRES_DB: ${ANALYTICS_DB_NAME}
-      # A configuração chave para compatibilidade com o Grafana
-      POSTGRES_HOST_AUTH_METHOD: "md5"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
-      # Um volume separado para os dados de analytics
       - postgres_analytics_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U analytics_user -d analytics_db"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${ANALYTICS_DB_USER} -d ${ANALYTICS_DB_NAME}"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
     networks:
       - backend
   
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:8.10
     container_name: fitcore-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@fitcore.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
     ports:
       - "5050:80"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      postgres-analytics:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
     networks:
       - backend
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.12-management-alpine
     container_name: fitcore-rabbitmq
     restart: unless-stopped
     ports:
-      - "5672:5672"     # queue
-      - "15672:15672"   # UI web
+      - "5672:5672"     # AMQP port
+      - "15672:15672"   # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - backend
 
   minio:
     image: minio/minio
     container_name: fitcore-minio
+    restart: unless-stopped
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"   # API
-      - "9001:9001"   # Painel
+      - "9001:9001"   # Console
     environment:
       MINIO_ROOT_USER: ${MINIO_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_PASS}
@@ -157,14 +236,17 @@ services:
       - backend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 15s
+      interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
 
   minio-init:
     image: quay.io/minio/mc
+    container_name: fitcore-minio-init
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "sleep 15 && \
         mc alias set local http://minio:9000 ${MINIO_USER} ${MINIO_PASS} && \
@@ -182,7 +264,9 @@ services:
       - backend
   
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.53.0
+    container_name: fitcore-prometheus
+    restart: unless-stopped
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -192,6 +276,8 @@ services:
 
   grafana:
     image: grafana/grafana:10.4.1
+    container_name: fitcore-grafana
+    restart: unless-stopped
     user: root
     ports:
       - "3000:3000"
@@ -201,15 +287,17 @@ services:
       prometheus:
         condition: service_started 
     environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
-      - ANALYTICS_DB_USER=${ANALYTICS_DB_USER}
-      - ANALYTICS_DB_PASS=${ANALYTICS_DB_PASS}
-      - ANALYTICS_DB_NAME=${ANALYTICS_DB_NAME}
-
       - GF_SECURITY_ALLOW_EMBEDDING=true
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_LOG_LEVEL=debug
+      - GF_LOG_LEVEL=info
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - ANALYTICS_DB_USER=${ANALYTICS_DB_USER}
+      - ANALYTICS_DB_PASS=${ANALYTICS_DB_PASS}
+      - ANALYTICS_DB_NAME=${ANALYTICS_DB_NAME}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
@@ -224,3 +312,6 @@ volumes:
   postgres_analytics_data:
   rabbitmq_data:
   minio_data:
+  pgadmin_data:
+  prometheus_data:
+  grafana_data:
