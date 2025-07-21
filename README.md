@@ -19,24 +19,27 @@ cp .env.example .env
 ```bash
 # Exemplo de configuração mínima
 POSTGRES_USER=fitcore
-POSTGRES_PASSWORD=fitcore123
-POSTGRES_DB=fitcore_db
+POSTGRES_PASSWORD=fitcorepass
+POSTGRES_DB=auth
 
 ANALYTICS_DB_USER=analytics_user
-ANALYTICS_DB_PASS=analytics123
+ANALYTICS_DB_PASS=analytics_pass
 ANALYTICS_DB_NAME=analytics_db
 
-RABBITMQ_USER=fitcore
-RABBITMQ_PASS=fitcore123
-QUEUES=user.events,training.events
+RABBITMQ_USER=admin
+RABBITMQ_PASS=admin
+QUEUES=cadastro-aluno-queue,cadastro-funcionario-queue,student-plan-changed-queue,student-status-changed-queue,student-deleted-queue,employee-role-changed-queue,employee-status-changed-queue,employee-deleted-queue
 
-MINIO_USER=fitcore
-MINIO_PASS=fitcore123
+MINIO_USER=minio
+MINIO_PASS=minio123
+MINIO_EXTERNAL_URL=http://localhost:9000
 
 PGADMIN_EMAIL=admin@fitcore.com
 PGADMIN_PASSWORD=admin123
 
-DEEPL_API_KEY=your-deepl-api-key-here
+# API Keys (Training Service)
+DEEPL_API_KEY=<ADD_YOUR_KEY_HERE>
+TRANSLATION_ENABLED=false
 ```
 
 ## Executando os Serviços
