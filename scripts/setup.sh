@@ -6,9 +6,9 @@ repos=(
   training-service
   payment-service
   media-service
-  notification-service
   frontend
   mobile-app
+  api-gateway
 )
 
 cd ..

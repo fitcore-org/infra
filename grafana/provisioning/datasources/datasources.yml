@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: FitCore-Analytics-Postgres  # Nome na interface do Grafana
+    type: postgres
+    uid: fitcore_postgres_ds # UID fixo 
+    url: postgres-analytics:5432
+    user: ${ANALYTICS_DB_USER}
+    database: ${ANALYTICS_DB_NAME}
+    isDefault: true
+    editable: true
+    jsonData:
+      sslmode: 'disable'
+      postgresVersion: 15
+      timescaledb: false
+    secureJsonData:
+      password: ${ANALYTICS_DB_PASS}
