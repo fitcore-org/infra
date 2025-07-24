@@ -6,6 +6,9 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-analytics-consumer
     restart: unless-stopped
+    profiles:
+      - analytics
+      - full
     depends_on:
       postgres-analytics:
         condition: service_healthy
@@ -36,6 +39,9 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-user-service
     restart: unless-stopped
+    profiles:
+      - core
+      - full
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,10 +63,11 @@ services:
       MINIO_EXTERNAL_URL: ${MINIO_EXTERNAL_URL}
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASS}
+      SEEDING_ENABLED: ${USER_SEEDING_ENABLED:-false}
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -74,6 +81,9 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-auth-service
     restart: unless-stopped
+    profiles:
+      - core
+      - full
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,7 +102,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -106,8 +116,13 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-training-service
     restart: unless-stopped
+    profiles:
+      - core
+      - full
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -125,7 +140,7 @@ services:
     ports:
       - "8082:8082"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -137,6 +152,10 @@ services:
     image: postgres:15-alpine
     container_name: fitcore-postgres
     restart: unless-stopped
+    profiles:
+      - infrastructure
+      - core
+      - full
     ports:
       - "5432:5432"
     environment:
@@ -159,6 +178,9 @@ services:
     image: postgres:15-alpine
     container_name: fitcore-postgres-analytics
     restart: unless-stopped
+    profiles:
+      - analytics
+      - full
     ports:
       - "5433:5432" # Porta externa diferente
     environment:
@@ -181,6 +203,8 @@ services:
     image: dpage/pgadmin4:8.10
     container_name: fitcore-pgadmin
     restart: unless-stopped
+    profiles:
+      - development
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@fitcore.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
@@ -202,6 +226,10 @@ services:
     image: rabbitmq:3.12-management-alpine
     container_name: fitcore-rabbitmq
     restart: unless-stopped
+    profiles:
+      - infrastructure
+      - core
+      - full
     ports:
       - "5672:5672"     # AMQP port
       - "15672:15672"   # Management UI
@@ -223,6 +251,10 @@ services:
     image: minio/minio
     container_name: fitcore-minio
     restart: unless-stopped
+    profiles:
+      - infrastructure
+      - core
+      - full
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"   # API
@@ -244,6 +276,10 @@ services:
   minio-init:
     image: quay.io/minio/mc
     container_name: fitcore-minio-init
+    profiles:
+      - infrastructure
+      - core
+      - full
     depends_on:
       minio:
         condition: service_healthy
@@ -267,6 +303,9 @@ services:
     image: prom/prometheus:v2.53.0
     container_name: fitcore-prometheus
     restart: unless-stopped
+    profiles:
+      - analytics
+      - full
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -279,6 +318,9 @@ services:
     container_name: fitcore-grafana
     restart: unless-stopped
     user: root
+    profiles:
+      - analytics
+      - full
     ports:
       - "3000:3000"
     depends_on:
