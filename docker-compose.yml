@@ -6,6 +6,9 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-analytics-consumer
     restart: unless-stopped
+    profiles:
+      - analytics
+      - full
     depends_on:
       postgres-analytics:
         condition: service_healthy
@@ -29,6 +32,26 @@ services:
       start_period: 60s
     networks:
       - backend
+  
+  ai-service:
+    build: 
+      context: ../ai-service
+      dockerfile: Dockerfile
+    container_name: fitcore-ai-service
+    profiles:
+      - analytics
+      - full
+    environment:
+      - RUN_VALIDATE_ON_STARTUP=true
+      - ANALYTIC_DATABASE_URL=${ANALYTIC_DATABASE_URL}
+    depends_on:
+      postgres-analytics:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    networks:
+      - backend
 
   user-service:
     build: 
@@ -36,6 +59,9 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-user-service
     restart: unless-stopped
+    profiles:
+      - core
+      - full
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,10 +83,11 @@ services:
       MINIO_EXTERNAL_URL: ${MINIO_EXTERNAL_URL}
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASS}
+      SEEDING_ENABLED: ${USER_SEEDING_ENABLED:-false}
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -74,6 +101,9 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-auth-service
     restart: unless-stopped
+    profiles:
+      - core
+      - full
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,7 +122,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -106,8 +136,13 @@ services:
       dockerfile: Dockerfile
     container_name: fitcore-training-service
     restart: unless-stopped
+    profiles:
+      - core
+      - full
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -125,7 +160,7 @@ services:
     ports:
       - "8082:8082"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -137,6 +172,10 @@ services:
     image: postgres:15-alpine
     container_name: fitcore-postgres
     restart: unless-stopped
+    profiles:
+      - infrastructure
+      - core
+      - full
     ports:
       - "5432:5432"
     environment:
@@ -159,6 +198,9 @@ services:
     image: postgres:15-alpine
     container_name: fitcore-postgres-analytics
     restart: unless-stopped
+    profiles:
+      - analytics
+      - full
     ports:
       - "5433:5432" # Porta externa diferente
     environment:
@@ -176,32 +218,15 @@ services:
       start_period: 30s
     networks:
       - backend
-  
-  pgadmin:
-    image: dpage/pgadmin4:8.10
-    container_name: fitcore-pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@fitcore.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
-    ports:
-      - "5050:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-analytics:
-        condition: service_healthy
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - backend
 
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     container_name: fitcore-rabbitmq
     restart: unless-stopped
+    profiles:
+      - infrastructure
+      - core
+      - full
     ports:
       - "5672:5672"     # AMQP port
       - "15672:15672"   # Management UI
@@ -223,6 +248,10 @@ services:
     image: minio/minio
     container_name: fitcore-minio
     restart: unless-stopped
+    profiles:
+      - infrastructure
+      - core
+      - full
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"   # API
@@ -244,6 +273,10 @@ services:
   minio-init:
     image: quay.io/minio/mc
     container_name: fitcore-minio-init
+    profiles:
+      - infrastructure
+      - core
+      - full
     depends_on:
       minio:
         condition: service_healthy
@@ -267,6 +300,9 @@ services:
     image: prom/prometheus:v2.53.0
     container_name: fitcore-prometheus
     restart: unless-stopped
+    profiles:
+      - analytics
+      - full
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -279,13 +315,16 @@ services:
     container_name: fitcore-grafana
     restart: unless-stopped
     user: root
+    profiles:
+      - analytics
+      - full
     ports:
       - "3000:3000"
     depends_on:
       postgres-analytics:
         condition: service_healthy
-      prometheus:
-        condition: service_started 
+      #prometheus:
+      #  condition: service_started 
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
@@ -294,7 +333,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_LOG_LEVEL=info
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_INSTALL_PLUGINS=volkovlabs-echarts-panel,grafana-clock-panel,grafana-simple-json-datasource
       - ANALYTICS_DB_USER=${ANALYTICS_DB_USER}
       - ANALYTICS_DB_PASS=${ANALYTICS_DB_PASS}
       - ANALYTICS_DB_NAME=${ANALYTICS_DB_NAME}
@@ -312,6 +351,5 @@ volumes:
   postgres_analytics_data:
   rabbitmq_data:
   minio_data:
-  pgadmin_data:
   prometheus_data:
   grafana_data:

@@ -1,0 +1,277 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 4,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fitcore_postgres_ds"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [
+            {
+              "options": {
+                "negative": {
+                  "color": "semi-dark-red",
+                  "index": 1,
+                  "text": "Negativo"
+                },
+                "neutral": {
+                  "color": "#808080",
+                  "index": 2,
+                  "text": "Neutro"
+                },
+                "positive": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Positivo"
+                }
+              },
+              "type": "value"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Positivo"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#2ca02c",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Negativo"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#d62728",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Neutro"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#808080",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 17,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "displayLabels": [
+          "percent",
+          "name"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fitcore_postgres_ds"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sentiment, COUNT(*) AS quantidade\r\nFROM feedback\r\nGROUP BY sentiment\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Sentimentos dos Alunos",
+      "transparent": true,
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fitcore_postgres_ds"
+      },
+      "description": "Palavras verdes indicam, os feedbacks positivos, vermelhas os negativos e as cinzas os neutros.",
+      "fieldConfig": {
+        "defaults": {
+          "fieldMinMax": false
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 17,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "baidu": {
+          "callback": "bmapReady",
+          "key": ""
+        },
+        "editor": {
+          "format": "auto"
+        },
+        "editorMode": "code",
+        "gaode": {
+          "key": "",
+          "plugin": "AMap.Scale,AMap.ToolBar"
+        },
+        "getOption": "// Pega a primeira série de dados retornada pela sua query\nconst series = context.panel.data.series[0];\n\n// Se não houver dados, retorna um objeto vazio para não dar erro\nif (!series || !series.fields) {\n  return {};\n}\n\n// Encontra os campos 'word', 'frequency' e 'sentiment' nos dados\nconst wordField = series.fields.find(f => f.name === 'word');\nconst frequencyField = series.fields.find(f => f.name === 'frequency');\nconst sentimentField = series.fields.find(f => f.name === 'sentiment'); // NOVO: Pega o campo de sentimento\n\n// Se algum dos campos essenciais não for encontrado, retorna um objeto vazio\nif (!wordField || !frequencyField || !sentimentField) {\n  return {};\n}\n\n// Transforma os dados no formato que o gráfico precisa\nconst data = [];\nfor (let i = 0; i < series.length; i++) {\n  const sentiment = sentimentField.values[i];\n  let color;\n\n  // NOVO: Define a cor com base no valor do sentimento\n  if (sentiment === 'positive') {\n    color = '#2ca02c'; // Verde\n  } else if (sentiment === 'negative') {\n    color = '#d62728'; // Vermelho\n  } else {\n    color = '#808080'; // Cinza para 'neutral' ou qualquer outro valor\n  }\n\n  data.push({\n    name: wordField.values[i],\n    value: frequencyField.values[i],\n    // NOVO: Adiciona a informação de estilo (cor) para cada palavra individualmente\n    textStyle: {\n      color: color\n    }\n  });\n}\n\n// Retorna o objeto de configuração completo do ECharts\nreturn {\n  // ALTERADO: Tooltip formatado para melhor visualização\n  tooltip: {\n    formatter: function (params) {\n      return `Palavra: <strong>${params.name}</strong><br/>Frequência: <strong>${params.value}</strong>`;\n    }\n  },\n  series: [{\n    type: 'wordCloud',\n    shape: 'circle',\n\n    // ALTERADO: Aumenta o tamanho mínimo da fonte e o espaçamento\n    gridSize: 15,\n    sizeRange: [20, 95],\n\n    // ALTERADO: Remove a rotação das palavras (todas ficam na horizontal)\n    rotationRange: [0, 0],\n\n    drawOutOfBound: false,\n\n    // O textStyle geral é herdado, mas a cor é sobrescrita pela cor individual de cada palavra\n    textStyle: {\n      fontFamily: 'sans-serif',\n      fontWeight: 'bold',\n    },\n\n    emphasis: {\n      focus: 'self',\n      textStyle: {\n        textShadowBlur: 10,\n        textShadowColor: '#333'\n      }\n    },\n\n    // Passa os dados formatados para o gráfico\n    data: data\n  }]\n};",
+        "google": {
+          "callback": "gmapReady",
+          "key": ""
+        },
+        "map": "none",
+        "renderer": "canvas",
+        "themeEditor": {
+          "config": "{}",
+          "name": "default"
+        },
+        "visualEditor": {
+          "code": "return {\n  dataset: context.editor.dataset,\n  series: context.editor.series,\n  xAxis: {\n    type: 'time',\n  },\n  yAxis: {\n    type: 'value',\n    min: 'dataMin',\n  },\n}\n",
+          "dataset": [],
+          "series": []
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fitcore_postgres_ds"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  word,\r\n  frequency,\r\n  sentiment \r\nFROM\r\n  word_frequency",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Palavras frequentes nos feedbacks",
+      "transparent": true,
+      "type": "volkovlabs-echarts-panel"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now/M",
+    "to": "now/M"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Análise dos Feedbacks",
+  "uid": "detc98fmewmioc",
+  "version": 1,
+  "weekStart": ""
+}
