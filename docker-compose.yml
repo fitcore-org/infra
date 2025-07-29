@@ -326,8 +326,8 @@ services:
     depends_on:
       postgres-analytics:
         condition: service_healthy
-      prometheus:
-        condition: service_started 
+      #prometheus:
+      #  condition: service_started 
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
@@ -336,7 +336,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_LOG_LEVEL=info
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_INSTALL_PLUGINS=volkovlabs-echarts-panel,grafana-clock-panel,grafana-simple-json-datasource
       - ANALYTICS_DB_USER=${ANALYTICS_DB_USER}
       - ANALYTICS_DB_PASS=${ANALYTICS_DB_PASS}
       - ANALYTICS_DB_NAME=${ANALYTICS_DB_NAME}
