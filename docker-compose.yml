@@ -218,29 +218,6 @@ services:
       start_period: 30s
     networks:
       - backend
-  
-  pgadmin:
-    image: dpage/pgadmin4:8.10
-    container_name: fitcore-pgadmin
-    restart: unless-stopped
-    profiles:
-      - development
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@fitcore.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
-    ports:
-      - "5050:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-analytics:
-        condition: service_healthy
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - backend
 
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
@@ -374,6 +351,5 @@ volumes:
   postgres_analytics_data:
   rabbitmq_data:
   minio_data:
-  pgadmin_data:
   prometheus_data:
   grafana_data:
