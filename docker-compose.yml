@@ -83,7 +83,7 @@ services:
       MINIO_EXTERNAL_URL: ${MINIO_EXTERNAL_URL}
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASS}
-      SEEDING_ENABLED: ${USER_SEEDING_ENABLED:-false}
+      USER_SEEDING_ENABLED: ${USER_SEEDING_ENABLED:-false}
     ports:
       - "8081:8081"
     healthcheck:
