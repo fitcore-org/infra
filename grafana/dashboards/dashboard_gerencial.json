@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 4,
   "links": [],
   "panels": [
     {
@@ -26,77 +26,44 @@
         "type": "grafana-postgresql-datasource",
         "uid": "fitcore_postgres_ds"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 0,
         "y": 0
       },
-      "id": 5,
+      "id": 10,
       "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "baidu": {
+          "callback": "bmapReady",
+          "key": ""
         },
-        "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
+        "editor": {
+          "format": "auto"
         },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "editorMode": "code",
+        "gaode": {
+          "key": "",
+          "plugin": "AMap.Scale,AMap.ToolBar"
+        },
+        "getOption": "/**\n * Pega os dados da query do Grafana.\n * A query deve retornar uma coluna de string/texto para as categorias (eixo X)\n * e uma coluna numérica para os valores (eixo Y).\n */\nconst seriesData = context.panel.data.series[0];\nconst categories = seriesData.fields.find(f => f.type === 'string').values;\nconst values = seriesData.fields.find(f => f.type === 'number').values;\n\n// Retorna o objeto de configuração para o ECharts\nreturn {\n  // Fundo transparente para se adaptar ao tema do Grafana\n  backgroundColor: 'transparent',\n\n  // Título do Gráfico (AJUSTADO)\n  title: {\n    text: 'Funcionários por Cargo',\n    left: 'center',\n    top: '0', // Coloca o título bem no topo do painel\n    textStyle: {\n      color: '#EEEEEE',\n      fontSize: 16,\n      fontWeight: 'normal',\n    },\n  },\n\n  // Dicas que aparecem ao passar o mouse\n  tooltip: {\n    trigger: 'axis',\n    axisPointer: {\n      type: 'shadow'\n    }\n  },\n\n  // Legenda do gráfico\n  legend: {\n    data: ['Quantidade'],\n    left: 'left',\n    bottom: '0',\n    textStyle: {\n      color: '#CCCCCC',\n    },\n  },\n\n  // Define o espaçamento do gráfico dentro do painel (AJUSTADO)\n  grid: {\n    left: '3%',\n    right: '4%',\n    bottom: '12%', // Aumentei um pouco para não cortar a legenda\n    top: '20%',   // AUMENTADO: Empurra o gráfico para baixo, dando espaço para o título\n    containLabel: true,\n  },\n\n  // Configuração do Eixo X (Categorias)\n  xAxis: [{\n    type: 'category',\n    data: categories,\n    axisTick: { show: false },\n    axisLine: { show: false },\n    axisLabel: { color: '#CCCCCC' }\n  }],\n\n  // Configuração do Eixo Y (Valores)\n  yAxis: [{\n    type: 'value',\n    axisLabel: { color: '#CCCCCC' },\n    splitLine: {\n      lineStyle: {\n        color: '#444444'\n      }\n    }\n  }],\n\n  // Definição da(s) série(s) de dados\n  series: [{\n    name: 'Quantidade',\n    type: 'bar',\n    barWidth: '60%',\n    data: values,\n    label: {\n      show: true,\n      position: 'top',\n      color: '#FFFFFF',\n      fontSize: 14,\n      fontWeight: 'bold',\n    },\n    itemStyle: {\n      borderColor: '#69C465',\n      borderWidth: 2,\n      color: {\n        type: 'linear',\n        x: 0, y: 0, x2: 0, y2: 1,\n        colorStops: [{\n          offset: 0, color: 'rgba(133, 224, 133, 0.8)'\n        }, {\n          offset: 1, color: 'rgba(42, 82, 42, 0.4)'\n        }]\n      }\n    },\n  }]\n};",
+        "google": {
+          "callback": "gmapReady",
+          "key": ""
+        },
+        "map": "none",
+        "renderer": "canvas",
+        "themeEditor": {
+          "config": "{}",
+          "name": "default"
+        },
+        "visualEditor": {
+          "code": "return {\n  dataset: context.editor.dataset,\n  series: context.editor.series,\n  xAxis: {\n    type: 'time',\n  },\n  yAxis: {\n    type: 'value',\n    min: 'dataMin',\n  },\n}\n",
+          "dataset": [],
+          "series": []
+        }
       },
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "datasource": {
@@ -106,7 +73,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \r\n  role AS \"Cargo\", \r\n  COUNT(*) AS \"Quantidade\"\r\nFROM employees_registered\r\nWHERE active = true\r\nGROUP BY role;",
+          "rawSql": "SELECT\r\n  role AS \"Cargo\",\r\n  COUNT(*) AS \"Quantidade\"\r\nFROM employees_registered\r\nWHERE active = true\r\nGROUP BY role;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -127,60 +94,53 @@
           }
         }
       ],
-      "title": "Equipes Ativas por Cargo",
-      "type": "barchart"
+      "transparent": true,
+      "type": "volkovlabs-echarts-panel"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "fitcore_postgres_ds"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
+      "description": "",
       "gridPos": {
         "h": 8,
-        "w": 9,
+        "w": 8,
         "x": 8,
         "y": 0
       },
-      "id": 1,
+      "id": 7,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "baidu": {
+          "callback": "bmapReady",
+          "key": ""
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "editor": {
+          "format": "auto"
+        },
+        "editorMode": "code",
+        "gaode": {
+          "key": "",
+          "plugin": "AMap.Scale,AMap.ToolBar"
+        },
+        "getOption": "const newValue = context?.panel?.data?.series?.[0]?.fields?.[1]?.values?.[0] ?? 0;\n\n// Armazena valor anterior de forma persistente\nwindow.previousAlunosAtivosValue = window.previousAlunosAtivosValue ?? 0;\nconst oldValue = window.previousAlunosAtivosValue;\nwindow.previousAlunosAtivosValue = newValue;\n\nif (!context.panel.chart) return;\n\nif (newValue !== oldValue) {\n  const duration = 1000;\n  const frameRate = 60;\n  const totalFrames = duration / 1000 * frameRate;\n  let frame = 0;\n  const increment = (newValue - oldValue) / totalFrames;\n\n  // Limpa qualquer animação anterior\n  if (window.alunosAtivosAnimationInterval) {\n    clearInterval(window.alunosAtivosAnimationInterval);\n  }\n\n  window.alunosAtivosAnimationInterval = setInterval(() => {\n    frame++;\n    let currentValue = oldValue + (increment * frame);\n\n    if (frame >= totalFrames) {\n      currentValue = newValue;\n      clearInterval(window.alunosAtivosAnimationInterval);\n    }\n\n    context.panel.chart.setOption({\n      graphic: [{\n        id: 'mainValue',\n        style: {\n          text: String(Math.round(currentValue)),\n          font: '200px Inter, Roboto, sans-serif',\n          fill: '#28a745',\n        }\n      }]\n    });\n  }, 1000 / frameRate);\n\n  // Configuração inicial com valor antigo\n  return {\n    backgroundColor: 'transparent',\n    title: {\n      text: 'Alunos Ativos',\n      left: 'center',\n      top: '10%',\n      textStyle: {\n        color: '#EEEEEE',\n        fontSize: 16,\n        fontWeight: 'normal',\n      }\n    },\n    graphic: [{\n      id: 'mainValue',\n      type: 'text',\n      left: 'center',\n      top: '25%',\n      style: {\n        text: String(Math.round(oldValue)),\n        font: '200px Inter, Roboto, sans-serif',\n        fill: '#28a745',\n      }\n    }]\n  };\n}\n\n// Valor não mudou: mostra direto\nreturn {\n  backgroundColor: 'transparent',\n  title: {\n    text: 'Alunos Ativos',\n    left: 'center',\n    top: '10%',\n    textStyle: {\n      color: '#EEEEEE',\n      fontSize: 16,\n      fontWeight: 'normal',\n    }\n  },\n  graphic: [{\n    id: 'mainValue',\n    type: 'text',\n    left: 'center',\n    top: '25%',\n    style: {\n      text: String(newValue),\n      font: '200px Inter, Roboto, sans-serif',\n      fill: '#28a745',\n    }\n  }]\n};\n",
+        "google": {
+          "callback": "gmapReady",
+          "key": ""
+        },
+        "map": "none",
+        "renderer": "canvas",
+        "themeEditor": {
+          "config": "{}",
+          "name": "default"
+        },
+        "visualEditor": {
+          "code": "return {\n  dataset: context.editor.dataset,\n  series: context.editor.series,\n  xAxis: {\n    type: 'time',\n  },\n  yAxis: {\n    type: 'value',\n    min: 'dataMin',\n  },\n}\n",
+          "dataset": [],
+          "series": []
+        }
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "datasource": {
@@ -190,7 +150,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) \r\nFROM students_registered \r\nWHERE active = true;",
+          "rawSql": "SELECT 'Alunos Ativos' AS label, COUNT(*) AS total\r\nFROM students_registered\r\nWHERE active = true;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -211,56 +171,53 @@
           }
         }
       ],
-      "title": "Alunos Ativos",
-      "type": "stat"
+      "transparent": true,
+      "type": "volkovlabs-echarts-panel"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "fitcore_postgres_ds"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
+      "description": "",
       "gridPos": {
         "h": 8,
-        "w": 7,
-        "x": 17,
+        "w": 8,
+        "x": 16,
         "y": 0
       },
-      "id": 3,
+      "id": 6,
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "baidu": {
+          "callback": "bmapReady",
+          "key": ""
         },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
+        "editor": {
+          "format": "auto"
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
+        "editorMode": "code",
+        "gaode": {
+          "key": "",
+          "plugin": "AMap.Scale,AMap.ToolBar"
+        },
+        "getOption": "const dataSeries = context?.panel?.data?.series?.[0];\n\nif (!dataSeries || !dataSeries.fields?.length) {\n  return {}; // evita erro caso os dados não tenham carregado\n}\n\nconst labels = dataSeries.fields[0].values;\nconst values = dataSeries.fields[1].values;\n\nconst series = [\n  {\n    name: 'Distribuição de Planos',\n    type: 'pie',\n    top: '25%',\n    radius: '80%',\n    label: {\n      formatter: '{b}: {d}%',\n      color: '#ccc',\n    },\n    data: labels.map((label, i) => ({\n      name: label,\n      value: values[i],\n      itemStyle: {\n        color: ['#00E676', '#FFEB3B', '#00BCD4', '#F50057', '#BDBDBD'][i % 5], // cores rotativas\n      },\n    })),\n  },\n];\n\nreturn {\n  backgroundColor: 'transparent',\n  title: {\n    text: 'Planos Ativos',\n    left: 'center',\n    top: '10%',\n    textStyle: {\n      color: '#EEEEEE',\n      fontSize: 16,\n      fontWeight: 'normal',\n    }\n  },\n  tooltip: {\n    trigger: 'item',\n    formatter: '{b}: {c} ({d}%)',\n  },\n  legend: {\n    orient: 'vertical',\n    left: 'left',\n    textStyle: {\n      color: '#aaa',\n    },\n  },\n  series,\n};\n",
+        "google": {
+          "callback": "gmapReady",
+          "key": ""
+        },
+        "map": "none",
+        "renderer": "canvas",
+        "themeEditor": {
+          "config": "{}",
+          "name": "default"
+        },
+        "visualEditor": {
+          "code": "return {\n  dataset: context.editor.dataset,\n  series: context.editor.series,\n  xAxis: {\n    type: 'time',\n  },\n  yAxis: {\n    type: 'value',\n    min: 'dataMin',\n  },\n}\n",
+          "dataset": [],
+          "series": []
         }
       },
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "datasource": {
@@ -291,67 +248,13 @@
           }
         }
       ],
-      "title": "Planos Ativos",
-      "type": "piechart"
+      "transparent": true,
+      "type": "volkovlabs-echarts-panel"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "fitcore_postgres_ds"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -359,103 +262,38 @@
         "x": 0,
         "y": 8
       },
-      "id": 4,
+      "id": 9,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "baidu": {
+          "callback": "bmapReady",
+          "key": ""
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
+        "editor": {
+          "format": "auto"
+        },
+        "editorMode": "code",
+        "gaode": {
+          "key": "",
+          "plugin": "AMap.Scale,AMap.ToolBar"
+        },
+        "getOption": "const seriesData = context?.panel?.data?.series?.[0];\nconst timeField = seriesData?.fields?.find(f => f.type === 'time');\nconst valueField = seriesData?.fields?.find(f => f.type === 'number');\n\nconst time = timeField?.values;\nconst values = valueField?.values;\n\nconst data = time.map((t, i) => [t, values[i]]);\n\nreturn {\n  backgroundColor: 'transparent',\n  title: {\n    text: 'Novas Matrículas (esse ano)',\n    left: 'center',\n    textStyle: {\n      color: '#EEEEEE',\n      fontSize: 16,\n      fontWeight: 'normal',\n    }\n  },\n  tooltip: {\n    trigger: 'axis',\n    backgroundColor: '#1f1f1f',\n    borderColor: '#333',\n    borderWidth: 1,\n    textStyle: {\n      color: '#eee',\n      fontSize: 12\n    }\n  },\n  xAxis: {\n    type: 'time',\n    axisLine: { lineStyle: { color: '#555' } },\n    axisLabel: { color: '#999' }\n  },\n  yAxis: {\n    type: 'value',\n    min: 0,\n    axisLine: { lineStyle: { color: '#555' } },\n    axisLabel: { color: '#999' },\n    splitLine: { lineStyle: { color: '#333' } }\n  },\n  grid: {\n    left: '6%',\n    right: '4%',\n    bottom: '12%',\n    top: '20%',\n    containLabel: true\n  },\n  legend: {\n    data: ['Novas Matrículas'],\n    left: 'left',\n    bottom: 10,\n    textStyle: {\n      color: '#aaa'\n    }\n  },\n  series: [\n    {\n      name: 'Novas Matrículas',\n      type: 'line',\n      showSymbol: false,\n      smooth: true,\n      lineStyle: {\n        color: '#3fb950',\n        width: 2\n      },\n      areaStyle: {\n        opacity: 0.1,\n        color: '#3fb950'\n      },\n      data\n    }\n  ]\n};\n",
+        "google": {
+          "callback": "gmapReady",
+          "key": ""
+        },
+        "map": "none",
+        "renderer": "canvas",
+        "themeEditor": {
+          "config": "{}",
+          "name": "default"
+        },
+        "visualEditor": {
+          "code": "return {\n  dataset: context.editor.dataset,\n  series: context.editor.series,\n  xAxis: {\n    type: 'time',\n  },\n  yAxis: {\n    type: 'value',\n    min: 'dataMin',\n  },\n}\n",
+          "dataset": [],
+          "series": []
         }
       },
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "fitcore_postgres_ds"
-          },
-          "editorMode": "code",
-          "format": "time_series",
-          "rawQuery": true,
-          "rawSql": "SELECT\r\n  DATE_TRUNC('day', registration_date) AS \"time\",\r\n  COUNT(*) AS \"novas_matriculas\"\r\nFROM students_registered\r\nWHERE\r\n  $__timeFilter(registration_date) -- Macro do Grafana para usar o seletor de tempo\r\nGROUP BY 1\r\nORDER BY 1;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Novas Matrículas (6 meses)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "fitcore_postgres_ds"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "datasource": {
@@ -465,7 +303,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) \r\nFROM students_registered \r\nWHERE registration_date >= current_date;",
+          "rawSql": "SELECT\r\n  DATE_TRUNC('day', registration_date) AS \"time\",\r\n  COUNT(*) AS \"Novas Matrículas\"\r\nFROM students_registered\r\nWHERE\r\n  $__timeFilter(registration_date)\r\nGROUP BY 1\r\nORDER BY 1;\r\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -486,24 +324,100 @@
           }
         }
       ],
-      "title": "Matrículas HOJE",
-      "type": "stat"
+      "transparent": true,
+      "type": "volkovlabs-echarts-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fitcore_postgres_ds"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "baidu": {
+          "callback": "bmapReady",
+          "key": ""
+        },
+        "editor": {
+          "format": "auto"
+        },
+        "editorMode": "code",
+        "gaode": {
+          "key": "",
+          "plugin": "AMap.Scale,AMap.ToolBar"
+        },
+        "getOption": "const newValue = context?.panel?.data?.series?.[0]?.fields?.[0]?.values?.[0] ?? 0;\n\n// Persistência entre renders do painel\nwindow.previousMatriculasValue = window.previousMatriculasValue ?? 0;\nconst oldValue = window.previousMatriculasValue;\nwindow.previousMatriculasValue = newValue;\n\n// Garante que o chart está disponível\nif (!context.panel.chart) return;\n\nif (newValue !== oldValue) {\n  const duration = 1000;\n  const frameRate = 60;\n  const totalFrames = (duration / 1000) * frameRate;\n  let frame = 0;\n  const increment = (newValue - oldValue) / totalFrames;\n\n  // Limpa animações antigas\n  if (window.matriculasAnimationInterval) clearInterval(window.matriculasAnimationInterval);\n\n  window.matriculasAnimationInterval = setInterval(() => {\n    frame++;\n    let currentValue = oldValue + increment * frame;\n\n    if (frame >= totalFrames) {\n      currentValue = newValue;\n      clearInterval(window.matriculasAnimationInterval);\n    }\n\n    context.panel.chart.setOption({\n      graphic: [{\n        id: 'matriculasValor',\n        style: {\n          text: String(Math.round(currentValue)),\n          font: '200px Inter, Roboto, sans-serif',\n          fill: '#28a745',\n        }\n      }]\n    });\n  }, 1000 / frameRate);\n\n  // Configuração inicial\n  return {\n    backgroundColor: 'transparent',\n    title: {\n      text: 'Matrículas de Hoje',\n      left: 'center',\n      top: '10%',\n      textStyle: {\n        color: '#EEEEEE',\n        fontSize: 16,\n        fontWeight: 'normal',\n      }\n    },\n    graphic: [{\n      id: 'matriculasValor',\n      type: 'text',\n      left: 'center',\n      top: '25%',\n      style: {\n        text: String(Math.round(oldValue)),\n        font: '200px Inter, Roboto, sans-serif',\n        fill: '#28a745',\n      }\n    }]\n  };\n}\n\n// Se não mudou, mostra direto\nreturn {\n  backgroundColor: 'transparent',\n  title: {\n    text: 'Matrículas de Hoje',\n    left: 'center',\n    top: '10%',\n    textStyle: {\n      color: '#EEEEEE',\n      fontSize: 16,\n      fontWeight: 'normal',\n    }\n  },\n  graphic: [{\n    id: 'matriculasValor',\n    type: 'text',\n    left: 'center',\n    top: '25%',\n    style: {\n      text: String(newValue),\n      font: '200px Inter, Roboto, sans-serif',\n      fill: '#28a745',\n    }\n  }]\n};\n",
+        "google": {
+          "callback": "gmapReady",
+          "key": ""
+        },
+        "map": "none",
+        "renderer": "canvas",
+        "themeEditor": {
+          "config": "{}",
+          "name": "default"
+        },
+        "visualEditor": {
+          "code": "return {\n  dataset: context.editor.dataset,\n  series: context.editor.series,\n  xAxis: {\n    type: 'time',\n  },\n  yAxis: {\n    type: 'value',\n    min: 'dataMin',\n  },\n}\n",
+          "dataset": [],
+          "series": []
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fitcore_postgres_ds"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) \r\nFROM students_registered \r\nWHERE registration_date >= current_date;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "volkovlabs-echarts-panel"
     }
   ],
-  "refresh": "30s",
+  "refresh": "",
   "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-6M",
+    "from": "now-1y",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Métricas de Negócio",
   "uid": "berx2tfdq3p4wc",
-  "version": 2,
+  "version": 4,
   "weekStart": ""
 }
