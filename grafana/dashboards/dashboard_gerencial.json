@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 4,
   "links": [],
   "panels": [
     {
@@ -46,7 +46,7 @@
           "key": "",
           "plugin": "AMap.Scale,AMap.ToolBar"
         },
-        "getOption": "const seriesData = context.panel.data.series[0];\nconst categories = seriesData.fields.find(f => f.type === 'string').values;\nconst values = seriesData.fields.find(f => f.type === 'number').values;\n\n// Retorna o objeto de configuração para o ECharts\nreturn {\n  // Fundo transparente para se adaptar ao tema do Grafana\n  backgroundColor: 'transparent',\n\n  // Título do Gráfico\n  title: {\n    text: 'Funcionários por Cargo',\n    left: 'center',\n    top: '0',\n    textStyle: {\n      color: '#EEEEEE',\n      fontSize: 16,\n      fontWeight: 'bold normal',\n    },\n  },\n\n  // Dicas que aparecem ao passar o mouse\n  tooltip: {\n    trigger: 'axis',\n    axisPointer: {\n      type: 'shadow'\n    }\n  },\n\n  // Legenda do gráfico (AJUSTADO)\n  legend: {\n    data: ['Quantidade'],\n    left: 'center', // ALTERADO: de 'left' para 'center' para centralizar a legenda\n    bottom: '0',\n    textStyle: {\n      color: '#CCCCCC',\n    },\n  },\n\n  // Define o espaçamento do gráfico dentro do painel\n  grid: {\n    left: '3%',\n    right: '4%',\n    bottom: '12%',\n    top: '20%',\n    containLabel: true,\n  },\n\n  // Configuração do Eixo X (Categorias)\n  xAxis: [{\n    type: 'category',\n    data: categories,\n    axisTick: { show: false },\n    axisLine: { show: false },\n    axisLabel: { color: '#CCCCCC' }\n  }],\n\n  // Configuração do Eixo Y (Valores)\n  yAxis: [{\n    type: 'value',\n    axisLabel: { color: '#CCCCCC' },\n    splitLine: {\n      lineStyle: {\n        color: '#444444'\n      }\n    }\n  }],\n\n  // Definição da(s) série(s) de dados\n  series: [{\n    name: 'Quantidade',\n    type: 'bar',\n    barWidth: '60%',\n    data: values,\n    label: {\n      show: true,\n      position: 'top',\n      color: '#FFFFFF',\n      fontSize: 14,\n      fontWeight: 'bold',\n    },\n    itemStyle: {\n      borderColor: '#69C465',\n      borderWidth: 2,\n      color: {\n        type: 'linear',\n        x: 0, y: 0, x2: 0, y2: 1,\n        colorStops: [{\n          offset: 0, color: 'rgba(34, 197, 94, 1)'\n        }, {\n          offset: 1, color: 'rgba(34, 197, 94, 0.4)'\n        }]\n      }\n    },\n  }]\n};",
+        "getOption": "const seriesData = context.panel.data.series[0];\nconst categories = seriesData.fields.find(f => f.type === 'string').values;\nconst values = seriesData.fields.find(f => f.type === 'number').values;\n\n// Mapa de tradução dos cargos\nconst roleTranslations = {\n  'RECEPTIONIST': 'Recepcionista',\n  'MANAGER': 'Gerente',\n  'PERSONAL_TRAINER': 'Personal Trainer',\n  'CLEANER': 'Faxineiro(a)',\n  // Adicione outros cargos aqui se necessário\n};\n\n// Substitui as categorias pelos nomes traduzidos\nconst translatedCategories = categories.map(role => roleTranslations[role] || role);\n\n// Retorna o objeto de configuração para o ECharts\nreturn {\n  backgroundColor: 'transparent',\n\n  title: {\n    text: 'Funcionários por Cargo',\n    left: 'center',\n    top: '0',\n    textStyle: {\n      color: '#EEEEEE',\n      fontSize: 16,\n      fontWeight: 'bold normal',\n    },\n  },\n\n  tooltip: {\n    trigger: 'axis',\n    axisPointer: {\n      type: 'shadow'\n    }\n  },\n\n  legend: {\n    data: ['Quantidade'],\n    left: 'center',\n    bottom: '0',\n    textStyle: {\n      color: '#CCCCCC',\n    },\n  },\n\n  grid: {\n    left: '3%',\n    right: '4%',\n    bottom: '12%',\n    top: '20%',\n    containLabel: true,\n  },\n\n  xAxis: [{\n    type: 'category',\n    data: translatedCategories,\n    axisTick: { show: false },\n    axisLine: { show: false },\n    axisLabel: { color: '#CCCCCC' }\n  }],\n\n  yAxis: [{\n    type: 'value',\n    axisLabel: { color: '#CCCCCC' },\n    splitLine: {\n      lineStyle: {\n        color: '#444444'\n      }\n    }\n  }],\n\n  series: [{\n    name: 'Quantidade',\n    type: 'bar',\n    barWidth: '60%',\n    data: values,\n    label: {\n      show: true,\n      position: 'top',\n      color: '#FFFFFF',\n      fontSize: 14,\n      fontWeight: 'bold',\n    },\n    itemStyle: {\n      borderColor: '#69C465',\n      borderWidth: 2,\n      color: {\n        type: 'linear',\n        x: 0, y: 0, x2: 0, y2: 1,\n        colorStops: [{\n          offset: 0, color: 'rgba(34, 197, 94, 1)'\n        }, {\n          offset: 1, color: 'rgba(34, 197, 94, 0.4)'\n        }]\n      }\n    },\n  }]\n};\n",
         "google": {
           "callback": "gmapReady",
           "key": ""
@@ -73,7 +73,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  role AS \"Cargo\",\r\n  COUNT(*) AS \"Quantidade\"\r\nFROM employees_registered\r\nWHERE active = true\r\nGROUP BY role;",
+          "rawSql": "SELECT\r\n  role AS \"Cargo\",\r\n  COUNT(*) AS \"Quantidade\"\r\nFROM employees_registered\r\nWHERE active = false\r\nGROUP BY role;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -418,6 +418,6 @@
   "timezone": "browser",
   "title": "Métricas de Negócio",
   "uid": "berx2tfdq3p4wc",
-  "version": 5,
+  "version": 1,
   "weekStart": ""
 }

@@ -55,7 +55,7 @@ services:
     ports:
       - "8004:8004"
     depends_on:
-      postgres:
+      postgres-analytics:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -76,6 +76,8 @@ services:
       - ANALYTIC_DATABASE_URL=${ANALYTIC_DATABASE_URL}
     depends_on:
       postgres-analytics:
+        condition: service_healthy
+      analytics-consumer:
         condition: service_healthy
     ports:
       - "8000:8000"

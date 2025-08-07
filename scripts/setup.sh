@@ -5,7 +5,9 @@ repos=(
   user-service
   training-service
   payment-service
-  media-service
+  ai-service
+  finance-service
+  analytics-consumer
   frontend
   mobile-app
   api-gateway
