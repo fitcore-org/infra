@@ -120,7 +120,7 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASS: ${RABBITMQ_PASS}
     ports:
-      - "8080:8080"
+      - "8084:8080"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -161,6 +161,73 @@ services:
       - "8082:8082"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - backend
+
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: fitcore-api-gateway
+    restart: unless-stopped
+    profiles:
+      - core
+      - full
+    depends_on:
+      - eureka-server
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - backend
+
+  eureka-server:
+    image: steeltoeoss/eureka-server:4.1.1
+    container_name: fitcore-eureka-server
+    restart: unless-stopped
+    profiles:
+      - core
+      - full
+    ports:
+      - "8761:8761"
+    networks:
+      - backend
+
+  payment-service:
+    build:
+      context: ../payment-service
+      dockerfile: Dockerfile
+    container_name: fitcore-payment-service
+    restart: unless-stopped
+    profiles:
+      - core
+      - full
+    depends_on:
+      - rabbitmq
+      - postgres
+      - eureka-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASS: ${POSTGRES_PASSWORD}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_HOST: rabbitmq
+      MINIO_USER: ${MINIO_USER}
+      MINIO_PASS: ${MINIO_PASS}
+      MINIO_URL: http://minio:9000/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      PAGARME_API_KEY: ${PAGARME_API_KEY}
+    ports:
+      - "8083:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
