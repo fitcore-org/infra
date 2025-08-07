@@ -33,6 +33,35 @@ services:
     networks:
       - backend
   
+  finance-service:
+    build: 
+      context: ../finance-service
+      dockerfile: Dockerfile
+    container_name: fitcore-finance-service
+    restart: unless-stopped
+    profiles:
+      - core
+      - full
+    environment:
+      POSTGRES_HOST: postgres-analytics
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${ANALYTICS_DB_USER}
+      POSTGRES_PASSWORD: ${ANALYTICS_DB_PASS}
+      POSTGRES_DB: ${ANALYTICS_DB_NAME}
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASS}
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+  
   ai-service:
     build: 
       context: ../ai-service
@@ -40,6 +69,7 @@ services:
     container_name: fitcore-ai-service
     profiles:
       - analytics
+      - core
       - full
     environment:
       - RUN_VALIDATE_ON_STARTUP=true
@@ -83,7 +113,7 @@ services:
       MINIO_EXTERNAL_URL: ${MINIO_EXTERNAL_URL}
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASS}
-      SEEDING_ENABLED: ${USER_SEEDING_ENABLED:-false}
+      USER_SEEDING_ENABLED: ${USER_SEEDING_ENABLED:-false}
     ports:
       - "8081:8081"
     healthcheck:
@@ -167,6 +197,24 @@ services:
       start_period: 90s
     networks:
       - backend
+    
+  eureka:
+    image: steeltoeoss/eureka-server:latest
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_SERVER_ENABLE_SELF_PRESERVATION: "false"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/eureka"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
 
   api-gateway:
     build:

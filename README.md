@@ -15,33 +15,6 @@ Este diretório contém a configuração do Docker Compose para os microserviço
 cp .env.example .env
 ```
 
-2. Edite o arquivo `.env` com suas configurações:
-```bash
-# Exemplo de configuração mínima
-POSTGRES_USER=fitcore
-POSTGRES_PASSWORD=fitcorepass
-POSTGRES_DB=auth
-
-ANALYTICS_DB_USER=analytics_user
-ANALYTICS_DB_PASS=analytics_pass
-ANALYTICS_DB_NAME=analytics_db
-
-RABBITMQ_USER=admin
-RABBITMQ_PASS=admin
-QUEUES=cadastro-aluno-queue,cadastro-funcionario-queue,student-plan-changed-queue,student-status-changed-queue,student-deleted-queue,employee-role-changed-queue,employee-status-changed-queue,employee-deleted-queue
-
-MINIO_USER=minio
-MINIO_PASS=minio123
-MINIO_EXTERNAL_URL=http://localhost:9000
-
-PGADMIN_EMAIL=admin@fitcore.com
-PGADMIN_PASSWORD=admin123
-
-# API Keys (Training Service)
-DEEPL_API_KEY=<ADD_YOUR_KEY_HERE>
-TRANSLATION_ENABLED=false
-```
-
 ## Executando os Serviços
 
 ### Subir todos os serviços
@@ -140,7 +113,7 @@ Os serviços são iniciados na seguinte ordem devido às dependências:
 
 ## Segurança
 
-⚠️ **IMPORTANTE**: Este docker-compose é para desenvolvimento. Para produção:
+**IMPORTANTE**: Este docker-compose é para desenvolvimento. Para produção:
 
 1. Use senhas mais seguras
 2. Configure SSL/TLS
